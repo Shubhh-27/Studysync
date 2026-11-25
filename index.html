@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="StudySync - Your AI-Powered Study Companion. Track consistency, get AI help, monitor focus, and more.">
+  <meta name="theme-color" content="#FFB6C1">
+  <title>StudySync — AI Study Platform</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============================================================ -->
+  <!-- 1. SPLASH SCREEN                                             -->
+  <!-- ============================================================ -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <span class="splash-emoji">📚</span>
+        <h1 class="splash-title">StudySync</h1>
+      </div>
+      <p class="splash-tagline">Your AI-Powered Study Companion</p>
+      <div class="splash-loader">
+        <div class="splash-loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 2. WALKTHROUGH OVERLAY                                       -->
+  <!-- ============================================================ -->
+  <div id="walkthrough-overlay" hidden>
+    <div class="walkthrough-spotlight"></div>
+    <div class="walkthrough-tooltip">
+      <h3 class="walkthrough-title"></h3>
+      <p class="walkthrough-description"></p>
+      <div class="walkthrough-footer">
+        <span class="walkthrough-step-counter"></span>
+        <div class="walkthrough-actions">
+          <button class="walkthrough-btn walkthrough-skip">Skip</button>
+          <button class="walkthrough-btn walkthrough-next">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 3. ASSESSMENT SCREEN                                         -->
+  <!-- ============================================================ -->
+  <div id="assessment-screen" hidden>
+    <div class="assessment-container">
+      <div class="assessment-header">
+        <h2><i class="fas fa-graduation-cap"></i> Let's Assess Your Knowledge</h2>
+        <p>Select a subject to get started. We'll tailor your study plan based on your performance.</p>
+      </div>
+
+      <div class="subject-selection">
+        <div class="subject-card" data-subject="c">
+          <div class="subject-icon">💻 <i class="fas fa-code"></i></div>
+          <h3>C</h3>
+          <p>Fundamentals of programming</p>
+        </div>
+        <div class="subject-card" data-subject="cpp">
+          <div class="subject-icon">⚡ <i class="fas fa-laptop-code"></i></div>
+          <h3>C++</h3>
+          <p>Object-oriented programming</p>
+        </div>
+        <div class="subject-card" data-subject="python">
+          <div class="subject-icon">🐍 <i class="fab fa-python"></i></div>
+          <h3>Python</h3>
+          <p>Versatile scripting language</p>
+        </div>
+        <div class="subject-card" data-subject="java">
+          <div class="subject-icon">☕ <i class="fab fa-java"></i></div>
+          <h3>Java</h3>
+          <p>Enterprise & Android development</p>
+        </div>
+        <div class="subject-card" data-subject="javascript">
+          <div class="subject-icon">🌐 <i class="fab fa-js-square"></i></div>
+          <h3>JavaScript</h3>
+          <p>Web & full-stack development</p>
+        </div>
+        <div class="subject-card" data-subject="dsa">
+          <div class="subject-icon">🌳 <i class="fas fa-project-diagram"></i></div>
+          <h3>Data Structures</h3>
+          <p>Algorithms & problem solving</p>
+        </div>
+        <div class="subject-card disabled">
+          <div class="subject-icon">✨ <i class="fas fa-ellipsis-h"></i></div>
+          <h3>More Coming Soon</h3>
+          <p>Stay tuned for new subjects</p>
+        </div>
+      </div>
+
+      <div class="assessment-quiz" hidden>
+        <div class="question-card">
+          <div class="question-number"></div>
+          <div class="question-text"></div>
+          <div class="options-grid">
+            <button class="option-btn" data-option="0"></button>
+            <button class="option-btn" data-option="1"></button>
+            <button class="option-btn" data-option="2"></button>
+            <button class="option-btn" data-option="3"></button>
+          </div>
+          <div class="question-progress">
+            <div class="question-progress-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="assessment-results" hidden>
+        <div class="results-icon"><i class="fas fa-trophy"></i></div>
+        <h2 class="results-title">Assessment Complete!</h2>
+        <div class="results-level">
+          <span class="level-label">Your Level:</span>
+          <span class="level-value" id="assessment-level"></span>
+        </div>
+        <div class="results-score-breakdown">
+          <div class="score-item">
+            <span class="score-label">Correct Answers</span>
+            <span class="score-value" id="correct-answers"></span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">Total Questions</span>
+            <span class="score-value" id="total-questions"></span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">Accuracy</span>
+            <span class="score-value" id="accuracy-score"></span>
+          </div>
+        </div>
+        <button class="btn-primary" id="continue-to-dashboard">
+          <i class="fas fa-arrow-right"></i> Continue to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 4. MAIN APP CONTAINER                                        -->
+  <!-- ============================================================ -->
+  <div id="main-app" hidden>
+
+    <!-- 4a. SIDEBAR -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">📚 StudySync</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-link active" data-section="dashboard">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="#" class="nav-link" data-section="consistency">
+          <span class="nav-icon">📈</span>
+          <span class="nav-text">Consistency</span>
+        </a>
+        <a href="#" class="nav-link" data-section="ai-chat">
+          <span class="nav-icon">🤖</span>
+          <span class="nav-text">AI Assistant</span>
+        </a>
+        <a href="#" class="nav-link" data-section="resources">
+          <span class="nav-icon">📚</span>
+          <span class="nav-text">Resources &amp; Focus</span>
+        </a>
+        <a href="#" class="nav-link" data-section="camera">
+          <span class="nav-icon">📷</span>
+          <span class="nav-text">Study Monitor</span>
+        </a>
+        <a href="#" class="nav-link" data-section="interview">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">Interview Prep</span>
+        </a>
+        <a href="#" class="nav-link has-submenu" data-section="others">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-text">Others</span>
+          <i class="fas fa-chevron-down submenu-arrow"></i>
+        </a>
+        <div class="submenu" id="others-submenu">
+          <a href="#" class="nav-link sub-link" data-section="group-study">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Group Study</span>
+          </a>
+          <a href="#" class="nav-link sub-link" data-section="planner">
+            <span class="nav-icon">📅</span>
+            <span class="nav-text">Daily Planner</span>
+          </a>
+          <a href="#" class="nav-link sub-link" data-section="notes">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">Notes</span>
+          </a>
+          <a href="#" class="nav-link sub-link" data-section="pomodoro">
+            <span class="nav-icon">⏱️</span>
+            <span class="nav-text">Pomodoro Timer</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a href="#" class="nav-link" data-section="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Settings</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- 4b. TOP BAR -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <button id="sidebar-toggle" aria-label="Toggle sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h2 id="page-title">Dashboard</h2>
+      </div>
+      <div class="topbar-right">
+        <div class="user-profile" id="user-profile-trigger">
+          <div class="avatar-circle" id="user-avatar">S</div>
+          <span id="username-display">Student</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <button id="dark-mode-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button id="notifications-btn" aria-label="Notifications" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="notification-badge">3</span>
+        </button>
+        <div id="profile-dropdown" class="dropdown-menu" hidden>
+          <a href="#" class="dropdown-item" data-action="view-profile">
+            <i class="fas fa-user"></i> View Profile
+          </a>
+          <a href="#" class="dropdown-item" data-action="settings">
+            <i class="fas fa-cog"></i> Settings
+          </a>
+          <hr class="dropdown-divider">
+          <a href="#" class="dropdown-item" data-action="logout">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- 4c. CONTENT AREA -->
+    <main id="content">
+
+      <!-- ======== DASHBOARD ======== -->
+      <section id="section-dashboard" class="content-section active">
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-clock"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-label">Total Study Hours</span>
+              <span class="stat-value" id="total-hours">0</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-fire"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-label">Current Streak</span>
+              <span class="stat-value" id="current-streak">0 days</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-star"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-label">Level</span>
+              <span class="stat-value" id="user-level">Beginner</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-icon"><i class="fas fa-bullseye"></i></div>
+            <div class="stat-card-info">
+              <span class="stat-label">Focus Score</span>
+              <span class="stat-value" id="focus-score">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-row">
+          <div class="chart-container card">
+            <h3 class="card-title"><i class="fas fa-chart-bar"></i> Weekly Overview</h3>
+            <canvas id="weekly-chart"></canvas>
+          </div>
+          <div class="recent-activity card">
+            <h3 class="card-title"><i class="fas fa-history"></i> Recent Activity</h3>
+            <ul id="activity-list">
+              <li class="activity-item">
+                <span class="activity-icon">🎯</span>
+                <div class="activity-info">
+                  <span class="activity-text">Welcome to StudySync!</span>
+                  <span class="activity-time">Just now</span>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="dashboard-row">
+          <div class="quick-actions card">
+            <h3 class="card-title"><i class="fas fa-bolt"></i> Quick Actions</h3>
+            <div class="actions-grid">
+              <button class="action-btn" data-action="start-study" data-target="camera">
+                <i class="fas fa-video"></i>
+                <span>Start Study Session</span>
+              </button>
+              <button class="action-btn" data-action="ask-ai" data-target="ai-chat">
+                <i class="fas fa-robot"></i>
+                <span>Ask AI</span>
+              </button>
+              <button class="action-btn" data-action="view-resources" data-target="resources">
+                <i class="fas fa-book-open"></i>
+                <span>View Resources</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== CONSISTENCY ======== -->
+      <section id="section-consistency" class="content-section" hidden>
+        <div class="consistency-header">
+          <h3><i class="fas fa-chart-line"></i> Study Consistency</h3>
+          <div class="view-tabs">
+            <button class="view-tab active" data-view="daily">Daily</button>
+            <button class="view-tab" data-view="weekly">Weekly</button>
+            <button class="view-tab" data-view="monthly">Monthly</button>
+            <button class="view-tab" data-view="yearly">Yearly</button>
+          </div>
+        </div>
+
+        <div class="consistency-stats-row">
+          <div class="consistency-stat card">
+            <span class="consistency-stat-label">Study Hours Today</span>
+            <span class="consistency-stat-value" id="hours-today">0</span>
+          </div>
+          <div class="consistency-stat card">
+            <span class="consistency-stat-label">This Week</span>
+            <span class="consistency-stat-value" id="hours-week">0</span>
+          </div>
+          <div class="consistency-stat card">
+            <span class="consistency-stat-label">This Month</span>
+            <span class="consistency-stat-value" id="hours-month">0</span>
+          </div>
+          <div class="consistency-stat card">
+            <span class="consistency-stat-label">This Year</span>
+            <span class="consistency-stat-value" id="hours-year">0</span>
+          </div>
+        </div>
+
+        <div class="consistency-chart-container card">
+          <div id="daily-view">
+            <h4>Contribution Heatmap</h4>
+            <div class="heatmap-months"></div>
+            <div class="heatmap-wrapper">
+              <div class="heatmap-days">
+                <span>Mon</span><span>Wed</span><span>Fri</span>
+              </div>
+              <div class="heatmap-grid" id="heatmap-grid">
+                <!-- 365 cells generated by JS, structure provided here for reference -->
+              </div>
+            </div>
+            <div class="heatmap-legend">
+              <span>Less</span>
+              <div class="heatmap-cell legend-cell" data-level="0"></div>
+              <div class="heatmap-cell legend-cell" data-level="1"></div>
+              <div class="heatmap-cell legend-cell" data-level="2"></div>
+              <div class="heatmap-cell legend-cell" data-level="3"></div>
+              <div class="heatmap-cell legend-cell" data-level="4"></div>
+              <span>More</span>
+            </div>
+          </div>
+          <div id="weekly-view" hidden>
+            <h4>Weekly Breakdown</h4>
+            <canvas id="weekly-consistency-chart"></canvas>
+          </div>
+          <div id="monthly-view" hidden>
+            <h4>Monthly Progress</h4>
+            <canvas id="monthly-consistency-chart"></canvas>
+          </div>
+          <div id="yearly-view" hidden>
+            <h4>Yearly Overview</h4>
+            <canvas id="yearly-consistency-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="study-status card">
+          <div class="status-indicator">
+            <span class="status-dot" id="study-status-dot"></span>
+            <span class="status-text" id="study-status-text">Not Studying</span>
+          </div>
+          <div class="live-timer">
+            <i class="fas fa-stopwatch"></i>
+            <span id="live-timer">00:00:00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== AI CHAT ======== -->
+      <section id="section-ai-chat" class="content-section" hidden>
+        <div class="ai-chat-container">
+          <div class="ai-chat-header">
+            <div class="ai-chat-title">
+              <span class="ai-avatar">🤖</span>
+              <div>
+                <h3>AI Study Assistant</h3>
+                <span class="ai-status"><span class="status-dot-sm online"></span> Online</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-chat-messages" id="chat-messages">
+            <div class="chat-message bot">
+              <span class="message-avatar">🤖</span>
+              <div class="message-bubble">
+                <p>Hi! I'm your AI study assistant. Ask me anything about your subjects, or I can help you understand topics you're struggling with.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-suggestions">
+            <button class="suggestion-chip" data-suggestion="Explain arrays in simple terms">Explain arrays</button>
+            <button class="suggestion-chip" data-suggestion="Help me understand pointers in C">Help with pointers</button>
+            <button class="suggestion-chip" data-suggestion="Quiz me on loops and iterations">Quiz me on loops</button>
+            <button class="suggestion-chip" data-suggestion="Based on my assessment, what should I study next?">What should I study next?</button>
+          </div>
+
+          <div class="ai-chat-input-area">
+            <textarea id="chat-input" placeholder="Ask me anything..." rows="1"></textarea>
+            <button id="send-message" aria-label="Send message">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== RESOURCES & FOCUS ======== -->
+      <section id="section-resources" class="content-section" hidden>
+        <div class="resources-tabs">
+          <button class="resource-tab active" data-tab="focus-areas">Focus Areas</button>
+          <button class="resource-tab" data-tab="learning-resources">Learning Resources</button>
+          <button class="resource-tab" data-tab="take-test">Take a Test</button>
+        </div>
+
+        <!-- Focus Areas -->
+        <div id="focus-areas-view">
+          <h3 class="section-subtitle"><i class="fas fa-crosshairs"></i> Areas to Improve</h3>
+          <div class="focus-cards-grid" id="focus-cards">
+            <div class="focus-card">
+              <h4>Pointers</h4>
+              <div class="proficiency-bar">
+                <div class="proficiency-fill" style="width: 30%"></div>
+              </div>
+              <span class="proficiency-label">30% Proficiency</span>
+              <div class="focus-card-actions">
+                <button class="btn-sm btn-outline">Practice</button>
+                <button class="btn-sm btn-primary">Learn</button>
+              </div>
+            </div>
+            <div class="focus-card">
+              <h4>Recursion</h4>
+              <div class="proficiency-bar">
+                <div class="proficiency-fill" style="width: 45%"></div>
+              </div>
+              <span class="proficiency-label">45% Proficiency</span>
+              <div class="focus-card-actions">
+                <button class="btn-sm btn-outline">Practice</button>
+                <button class="btn-sm btn-primary">Learn</button>
+              </div>
+            </div>
+            <div class="focus-card">
+              <h4>OOP Concepts</h4>
+              <div class="proficiency-bar">
+                <div class="proficiency-fill" style="width: 55%"></div>
+              </div>
+              <span class="proficiency-label">55% Proficiency</span>
+              <div class="focus-card-actions">
+                <button class="btn-sm btn-outline">Practice</button>
+                <button class="btn-sm btn-primary">Learn</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Learning Resources -->
+        <div id="learning-resources-view" hidden>
+          <div class="resources-header">
+            <div class="resource-subject-selector">
+              <label for="resource-subject">Subject:</label>
+              <select id="resource-subject">
+                <option value="all">All Subjects</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="javascript">JavaScript</option>
+                <option value="dsa">Data Structures</option>
+              </select>
+            </div>
+            <div class="resource-categories">
+              <button class="category-btn active" data-category="all">All</button>
+              <button class="category-btn" data-category="videos">Videos</button>
+              <button class="category-btn" data-category="articles">Articles</button>
+              <button class="category-btn" data-category="practice">Practice</button>
+            </div>
+          </div>
+          <div class="resources-grid" id="resources-list">
+            <div class="resource-card" data-category="videos">
+              <div class="resource-thumbnail">
+                <i class="fas fa-play-circle"></i>
+              </div>
+              <div class="resource-info">
+                <h4>Introduction to C Programming</h4>
+                <span class="resource-source"><i class="fab fa-youtube"></i> YouTube</span>
+                <span class="resource-difficulty beginner">Beginner</span>
+              </div>
+              <a href="#" class="resource-link" target="_blank" rel="noopener">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </div>
+            <div class="resource-card" data-category="articles">
+              <div class="resource-thumbnail">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <div class="resource-info">
+                <h4>Understanding Pointers — A Visual Guide</h4>
+                <span class="resource-source"><i class="fas fa-globe"></i> Website</span>
+                <span class="resource-difficulty intermediate">Intermediate</span>
+              </div>
+              <a href="#" class="resource-link" target="_blank" rel="noopener">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </div>
+            <div class="resource-card" data-category="practice">
+              <div class="resource-thumbnail">
+                <i class="fas fa-code"></i>
+              </div>
+              <div class="resource-info">
+                <h4>Practice: Array Manipulation Challenges</h4>
+                <span class="resource-source"><i class="fas fa-globe"></i> Website</span>
+                <span class="resource-difficulty advanced">Advanced</span>
+              </div>
+              <a href="#" class="resource-link" target="_blank" rel="noopener">
+                <i class="fas fa-external-link-alt"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Take a Test -->
+        <div id="take-test-view" hidden>
+          <div class="test-setup">
+            <h3 class="section-subtitle"><i class="fas fa-flask"></i> Custom Test</h3>
+            <div class="test-setup-form">
+              <div class="form-group">
+                <label for="test-subject">Subject</label>
+                <select id="test-subject">
+                  <option value="">Select a subject</option>
+                  <option value="c">C</option>
+                  <option value="cpp">C++</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="dsa">Data Structures</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="test-topic">Topic</label>
+                <select id="test-topic">
+                  <option value="">Select a topic</option>
+                </select>
+              </div>
+              <button class="btn-primary" id="start-detailed-test">
+                <i class="fas fa-play"></i> Start Test
+              </button>
+            </div>
+          </div>
+          <div id="detailed-test-container" hidden>
+            <div class="question-card">
+              <div class="question-number"></div>
+              <div class="question-text"></div>
+              <div class="options-grid">
+                <button class="option-btn" data-option="0"></button>
+                <button class="option-btn" data-option="1"></button>
+                <button class="option-btn" data-option="2"></button>
+                <button class="option-btn" data-option="3"></button>
+              </div>
+              <div class="question-progress">
+                <div class="question-progress-bar"></div>
+              </div>
+            </div>
+          </div>
+          <div id="detailed-test-results" hidden>
+            <div class="results-icon"><i class="fas fa-chart-pie"></i></div>
+            <h3>Test Results</h3>
+            <div class="results-score-breakdown">
+              <div class="score-item">
+                <span class="score-label">Score</span>
+                <span class="score-value" id="detailed-test-score"></span>
+              </div>
+              <div class="score-item">
+                <span class="score-label">Accuracy</span>
+                <span class="score-value" id="detailed-test-accuracy"></span>
+              </div>
+            </div>
+            <div class="generated-resources" id="generated-resources"></div>
+            <button class="btn-primary" id="retake-test">
+              <i class="fas fa-redo"></i> Take Another Test
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== STUDY MONITOR / CAMERA ======== -->
+      <section id="section-camera" class="content-section" hidden>
+        <div class="camera-container">
+          <div class="camera-feed-wrapper">
+            <video id="camera-feed" autoplay playsinline muted></video>
+            <canvas id="detection-canvas"></canvas>
+            <div class="camera-status-badge" id="camera-status">
+              <i class="fas fa-video-slash"></i> Camera Off
+            </div>
+          </div>
+
+          <div class="camera-controls">
+            <button class="btn-success" id="start-camera">
+              <i class="fas fa-play"></i> Start Monitoring
+            </button>
+            <button class="btn-danger" id="stop-camera" hidden>
+              <i class="fas fa-stop"></i> Stop
+            </button>
+          </div>
+
+          <div class="detection-stats">
+            <div class="stat card">
+              <span class="stat-label">Person Detected</span>
+              <span class="stat-value" id="person-status">❌ Not Detected</span>
+            </div>
+            <div class="stat card">
+              <span class="stat-label">Phone Detected</span>
+              <span class="stat-value" id="phone-status">❌ Not Detected</span>
+            </div>
+            <div class="stat card">
+              <span class="stat-label">Study Timer</span>
+              <span class="stat-value" id="study-timer">00:00:00</span>
+            </div>
+            <div class="stat card">
+              <span class="stat-label">Alerts Today</span>
+              <span class="stat-value" id="alert-count">0</span>
+            </div>
+          </div>
+
+          <div class="alert-banner" id="alert-banner" hidden>
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>⚠️ Phone detected! Study timer paused.</span>
+          </div>
+
+          <div class="detection-log card">
+            <h4><i class="fas fa-list"></i> Detection Log</h4>
+            <div id="detection-log">
+              <p class="log-empty">No detection events yet. Start monitoring to begin.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
+
+      <!-- ======== INTERVIEW PREPARATION ======== -->
+      <section id="section-interview" class="content-section" hidden>
+        <div class="interview-container">
+
+          <!-- 1. Interview Setup View -->
+          <div id="interview-setup-view" class="interview-view">
+            <div class="interview-hero card">
+              <div class="interview-hero-icon">💼</div>
+              <h2>AI Mock Interview Preparation</h2>
+              <p>Practice realistic, company-tailored technical &amp; behavioral interviews with real-time AI speech recognition, vocal coaching, and camera non-verbal delivery analysis.</p>
+            </div>
+
+            <div class="interview-form card">
+              <div class="form-group">
+                <label for="interview-company"><i class="fas fa-building"></i> Target Company</label>
+                <input type="text" id="interview-company" placeholder="e.g., Google, Microsoft, Amazon, Meta, TCS, Infosys, Startup..." value="Google">
+                <div class="quick-company-tags">
+                  <span class="company-tag" data-company="Google">Google</span>
+                  <span class="company-tag" data-company="Microsoft">Microsoft</span>
+                  <span class="company-tag" data-company="Amazon">Amazon</span>
+                  <span class="company-tag" data-company="Meta">Meta</span>
+                  <span class="company-tag" data-company="TCS">TCS</span>
+                  <span class="company-tag" data-company="Infosys">Infosys</span>
+                  <span class="company-tag" data-company="Tech Startup">Startup</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="interview-role"><i class="fas fa-user-tie"></i> Target Role / Position</label>
+                <input type="text" id="interview-role" placeholder="e.g., Software Development Engineer, Frontend, Backend, Full Stack..." value="Software Development Engineer">
+                <div class="quick-role-tags">
+                  <span class="role-tag" data-role="Software Development Engineer">SDE / Core Dev</span>
+                  <span class="role-tag" data-role="Frontend Developer">Frontend</span>
+                  <span class="role-tag" data-role="Backend Developer">Backend</span>
+                  <span class="role-tag" data-role="Data Structures & Algorithms Intern">DSA Intern</span>
+                  <span class="role-tag" data-role="Full Stack Engineer">Full Stack</span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="interview-rounds"><i class="fas fa-list-ol"></i> Number of Questions</label>
+                  <select id="interview-rounds">
+                    <option value="3">3 Questions (~6 mins Quick Practice)</option>
+                    <option value="5" selected>5 Questions (~12 mins Standard Round)</option>
+                    <option value="8">8 Questions (~20 mins Deep Technical)</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="interview-difficulty"><i class="fas fa-signal"></i> Difficulty</label>
+                  <select id="interview-difficulty">
+                    <option value="Entry">Entry Level / College Graduate</option>
+                    <option value="Mid" selected>Intermediate / SDE-I</option>
+                    <option value="Senior">Senior / SDE-II</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="interview-features-checklist">
+                <div class="checklist-item"><i class="fas fa-check-circle"></i> <strong>Non-Verbal Camera Vision:</strong> Tracks eye-contact, confidence, facial expressions &amp; posture</div>
+                <div class="checklist-item"><i class="fas fa-check-circle"></i> <strong>Microphone Voice Analysis:</strong> Live speech-to-text, filler words (um/uh), and speaking cadence</div>
+                <div class="checklist-item"><i class="fas fa-check-circle"></i> <strong>Model Answers:</strong> Question-by-question comparison with company-calibrated ideal answers</div>
+              </div>
+
+              <button class="btn-primary btn-lg" id="start-interview-btn" style="width: 100%; margin-top: 20px;">
+                <i class="fas fa-play"></i> Start AI Mock Interview
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Active Interview Session View -->
+          <div id="interview-active-view" class="interview-view" hidden>
+            <div class="interview-active-header card">
+              <div class="interview-meta">
+                <span class="company-badge" id="active-company-badge">Google</span>
+                <span class="role-badge" id="active-role-badge">Software Engineer</span>
+                <span class="interview-step-counter" id="active-q-counter">Question 1 of 5</span>
+              </div>
+              <div class="interview-timer-box">
+                <i class="fas fa-stopwatch"></i>
+                <span id="interview-timer">02:30</span>
+              </div>
+            </div>
+
+            <div class="interview-active-grid">
+              <!-- Left: Interviewer & Question -->
+              <div class="interviewer-panel card">
+                <div class="interviewer-avatar">
+                  <div class="ai-avatar-pulse">
+                    <span class="avatar-emoji">👩‍💼</span>
+                  </div>
+                  <div class="interviewer-info">
+                    <h4>AI Interviewer</h4>
+                    <span class="interviewer-status"><span class="status-dot-sm online"></span> Live &amp; Evaluating</span>
+                  </div>
+                  <button class="btn-sm btn-outline" id="speak-question-btn" title="Speak question aloud">
+                    <i class="fas fa-volume-up"></i> Listen
+                  </button>
+                </div>
+
+                <div class="question-container">
+                  <span class="question-tag" id="current-q-type">Technical / Problem Solving</span>
+                  <h3 id="current-interview-question">Loading question...</h3>
+                  <div class="question-hints">
+                    <small><i class="fas fa-lightbulb"></i> Tip: Use the STAR method (Situation, Task, Action, Result) or discuss time/space complexities for technical questions.</small>
+                  </div>
+                </div>
+
+                <!-- Live Non-Verbal Feedback Gauge -->
+                <div class="non-verbal-realtime-card">
+                  <h5><i class="fas fa-eye"></i> Live Non-Verbal &amp; Voice Analysis</h5>
+                  <div class="metrics-mini-grid">
+                    <div class="metric-mini">
+                      <span class="metric-mini-label">Eye Contact</span>
+                      <span class="metric-mini-val" id="metric-eye-contact">Optimal (88%)</span>
+                    </div>
+                    <div class="metric-mini">
+                      <span class="metric-mini-label">Expression</span>
+                      <span class="metric-mini-val" id="metric-expression">Confident</span>
+                    </div>
+                    <div class="metric-mini">
+                      <span class="metric-mini-label">Speaking Pace</span>
+                      <span class="metric-mini-val" id="metric-pace">Normal (~135 WPM)</span>
+                    </div>
+                    <div class="metric-mini">
+                      <span class="metric-mini-label">Fillers (um/uh)</span>
+                      <span class="metric-mini-val" id="metric-fillers">0 detected</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Candidate Camera & Mic Feed -->
+              <div class="candidate-panel card">
+                <div class="candidate-video-wrapper">
+                  <video id="interview-video-feed" autoplay playsinline muted></video>
+                  <canvas id="interview-canvas-overlay"></canvas>
+                  <div class="camera-status-pill" id="interview-cam-badge">
+                    <i class="fas fa-video"></i> Camera Active
+                  </div>
+                </div>
+
+                <!-- Audio Visualizer Canvas -->
+                <div class="audio-visualizer-container">
+                  <canvas id="audio-waveform" height="40"></canvas>
+                </div>
+
+                <!-- Mic Recording Controls -->
+                <div class="mic-controls-bar">
+                  <button class="btn-mic-record" id="toggle-mic-btn">
+                    <i class="fas fa-microphone"></i>
+                    <span id="mic-btn-label">Record Answer</span>
+                  </button>
+                  <span class="mic-status-hint" id="mic-status-hint">Click microphone to speak</span>
+                </div>
+
+                <!-- Real-time Speech-to-Text Transcript -->
+                <div class="transcript-box">
+                  <div class="transcript-header">
+                    <span><i class="fas fa-comment-dots"></i> Spoken Answer (Live Transcript)</span>
+                    <button class="btn-xs btn-outline" id="clear-transcript-btn">Clear</button>
+                  </div>
+                  <textarea id="candidate-transcript" placeholder="Your speech will appear here automatically as you talk into the microphone. You can also type or edit your answer directly..."></textarea>
+                </div>
+
+                <div class="interview-action-buttons">
+                  <button class="btn-outline" id="cancel-interview-btn">
+                    <i class="fas fa-times"></i> Exit
+                  </button>
+                  <button class="btn-primary" id="submit-answer-btn">
+                    <span>Submit Answer &amp; Next</span> <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Comprehensive Evaluation & Feedback Report -->
+          <div id="interview-report-view" class="interview-view" hidden>
+            <div class="report-header card">
+              <div class="report-badge-trophy">🏆</div>
+              <h2>Mock Interview Performance Report</h2>
+              <p id="report-subtitle">Evaluation for Software Development Engineer role at Google</p>
+            </div>
+
+            <!-- Score Cards -->
+            <div class="report-scores-grid">
+              <div class="report-score-card card">
+                <div class="score-circle-wrapper">
+                  <div class="score-circle-val" id="report-overall-score">85%</div>
+                </div>
+                <h4>Overall Rating</h4>
+                <span class="score-tag hire" id="report-verdict">Strong Hire</span>
+              </div>
+
+              <div class="report-score-card card">
+                <div class="sub-score-val" id="report-technical-score">88%</div>
+                <h4>Technical Depth</h4>
+                <p>Data structures, algorithms, problem decomposition &amp; correctness</p>
+              </div>
+
+              <div class="report-score-card card">
+                <div class="sub-score-val" id="report-communication-score">82%</div>
+                <h4>Verbal Articulation</h4>
+                <p>Clarity of explanations, pacing &amp; avoidance of filler pauses</p>
+              </div>
+
+              <div class="report-score-card card">
+                <div class="sub-score-val" id="report-nonverbal-score">86%</div>
+                <h4>Non-Verbal Demeanor</h4>
+                <p>Eye contact engagement, composure &amp; confident expressions</p>
+              </div>
+            </div>
+
+            <!-- Detailed Question Reviews & Model Answers -->
+            <div class="report-questions-review card">
+              <h3><i class="fas fa-clipboard-check"></i> Comprehensive Question Breakdown &amp; Ideal Model Answers</h3>
+              <div id="report-qa-list" class="report-qa-list">
+                <!-- Dynamically generated per question -->
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="report-actions-footer">
+              <button class="btn-outline btn-lg" id="retake-interview-btn">
+                <i class="fas fa-redo"></i> Practice Another Interview
+              </button>
+              <button class="btn-primary btn-lg" id="export-report-btn">
+                <i class="fas fa-file-download"></i> Save Feedback Report (JSON)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ======== OTHERS – GROUP STUDY ======== -->
+      <section id="section-group-study" class="content-section" hidden>
+        <div class="group-study-container">
+          <div class="group-study-header">
+            <h3><i class="fas fa-users"></i> Group Study Rooms</h3>
+            <button class="btn-primary" id="create-room-btn">
+              <i class="fas fa-plus"></i> Create Room
+            </button>
+          </div>
+
+          <div class="create-room" id="create-room-form" hidden>
+            <div class="form-group">
+              <label for="room-name">Room Name</label>
+              <input type="text" id="room-name" placeholder="e.g., DSA Study Group">
+            </div>
+            <div class="form-group">
+              <label for="room-subject">Subject</label>
+              <select id="room-subject">
+                <option value="general">General</option>
+                <option value="c">C</option>
+                <option value="cpp">C++</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="javascript">JavaScript</option>
+                <option value="dsa">Data Structures</option>
+              </select>
+            </div>
+            <div class="form-actions">
+              <button class="btn-sm btn-outline" id="cancel-create-room">Cancel</button>
+              <button class="btn-sm btn-primary" id="submit-create-room">Create</button>
+            </div>
+          </div>
+
+          <div class="rooms-list" id="study-rooms">
+            <div class="room-card">
+              <div class="room-info">
+                <h4>DSA Practice Group</h4>
+                <span class="room-subject-tag">Data Structures</span>
+                <span class="room-members"><i class="fas fa-user"></i> 3 members</span>
+              </div>
+              <button class="btn-sm btn-primary join-room-btn">Join</button>
+            </div>
+            <div class="room-card">
+              <div class="room-info">
+                <h4>Python Beginners</h4>
+                <span class="room-subject-tag">Python</span>
+                <span class="room-members"><i class="fas fa-user"></i> 5 members</span>
+              </div>
+              <button class="btn-sm btn-primary join-room-btn">Join</button>
+            </div>
+          </div>
+
+          <div class="room-view" id="room-view" hidden>
+            <div class="room-view-header">
+              <button class="btn-sm btn-outline" id="leave-room"><i class="fas fa-arrow-left"></i> Back</button>
+              <h4 id="room-view-title">Room Name</h4>
+              <span class="room-view-members" id="room-view-members">0 participants</span>
+            </div>
+            <div class="room-chat" id="room-chat">
+              <div class="room-participants" id="room-participants">
+                <h5>Participants</h5>
+                <ul id="participants-list"></ul>
+              </div>
+              <div class="room-messages" id="room-messages"></div>
+            </div>
+            <div class="room-input-area">
+              <input type="text" id="room-message-input" placeholder="Type a message...">
+              <button class="btn-primary" id="send-room-message"><i class="fas fa-paper-plane"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== OTHERS – DAILY PLANNER ======== -->
+      <section id="section-planner" class="content-section" hidden>
+        <div class="planner-container">
+          <div class="planner-header">
+            <h3><i class="fas fa-calendar-alt"></i> Daily Planner</h3>
+            <div class="planner-date-controls">
+              <button class="btn-sm btn-outline" id="prev-day"><i class="fas fa-chevron-left"></i></button>
+              <input type="date" id="planner-date">
+              <button class="btn-sm btn-outline" id="next-day"><i class="fas fa-chevron-right"></i></button>
+              <button class="btn-sm btn-primary" id="today-btn">Today</button>
+            </div>
+          </div>
+
+          <div class="add-task-form card">
+            <input type="text" id="task-input" placeholder="Add a new task...">
+            <select id="task-priority">
+              <option value="low">Low Priority</option>
+              <option value="medium" selected>Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+            <button class="btn-primary" id="add-task-btn">
+              <i class="fas fa-plus"></i> Add
+            </button>
+          </div>
+
+          <div class="planner-tasks" id="planner-tasks">
+            <p class="empty-state">No tasks for today. Add one above!</p>
+          </div>
+
+          <div class="planner-stats card">
+            <div class="planner-stat">
+              <span class="planner-stat-label">Completed</span>
+              <span class="planner-stat-value" id="tasks-completed">0</span>
+            </div>
+            <div class="planner-stat">
+              <span class="planner-stat-label">Total Tasks</span>
+              <span class="planner-stat-value" id="tasks-total">0</span>
+            </div>
+            <div class="planner-stat">
+              <span class="planner-stat-label">Progress</span>
+              <div class="planner-progress">
+                <div class="planner-progress-bar" id="tasks-progress-bar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== OTHERS – NOTES ======== -->
+      <section id="section-notes" class="content-section" hidden>
+        <div class="notes-container">
+          <div class="notes-sidebar">
+            <button class="btn-primary" id="new-note">
+              <i class="fas fa-plus"></i> New Note
+            </button>
+            <div class="notes-list" id="notes-list">
+              <div class="note-item active" data-note-id="default">
+                <h5>Welcome Note</h5>
+                <p>Getting started with StudySync notes...</p>
+                <span class="note-date">Today</span>
+              </div>
+            </div>
+          </div>
+          <div class="note-editor">
+            <input type="text" id="note-title" placeholder="Note title..." value="Welcome Note">
+            <div class="note-toolbar">
+              <button class="toolbar-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+              <button class="toolbar-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+              <button class="toolbar-btn" data-command="heading" title="Heading"><i class="fas fa-heading"></i></button>
+              <button class="toolbar-btn" data-command="insertUnorderedList" title="List"><i class="fas fa-list-ul"></i></button>
+              <button class="toolbar-btn" data-command="code" title="Code"><i class="fas fa-code"></i></button>
+            </div>
+            <div id="note-content" contenteditable="true">
+              <p>Welcome to StudySync Notes! Use this space to jot down important concepts, formulas, and study reminders.</p>
+            </div>
+            <div class="note-footer">
+              <span class="auto-save-indicator" id="auto-save-indicator">
+                <i class="fas fa-check-circle"></i> Saved
+              </span>
+              <span class="word-count" id="word-count">0 words</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== OTHERS – POMODORO TIMER ======== -->
+      <section id="section-pomodoro" class="content-section" hidden>
+        <div class="pomodoro-container">
+          <div class="pomodoro-circle">
+            <svg class="pomodoro-svg" viewBox="0 0 200 200">
+              <circle class="pomodoro-bg-ring" cx="100" cy="100" r="90" />
+              <circle class="pomodoro-fg-ring" id="pomodoro-ring" cx="100" cy="100" r="90" />
+            </svg>
+            <div class="pomodoro-time" id="pomodoro-display">25:00</div>
+          </div>
+          <div class="pomodoro-label" id="pomodoro-label">Focus Time</div>
+
+          <div class="pomodoro-controls">
+            <button class="btn-success" id="pomodoro-start">
+              <i class="fas fa-play"></i> Start
+            </button>
+            <button class="btn-warning" id="pomodoro-pause" hidden>
+              <i class="fas fa-pause"></i> Pause
+            </button>
+            <button class="btn-outline" id="pomodoro-reset">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </div>
+
+          <div class="pomodoro-settings card">
+            <h4>Timer Settings</h4>
+            <div class="pomodoro-settings-grid">
+              <div class="form-group">
+                <label for="work-duration">Work (min)</label>
+                <input type="number" id="work-duration" value="25" min="1" max="120">
+              </div>
+              <div class="form-group">
+                <label for="break-duration">Break (min)</label>
+                <input type="number" id="break-duration" value="5" min="1" max="30">
+              </div>
+              <div class="form-group">
+                <label for="long-break-duration">Long Break (min)</label>
+                <input type="number" id="long-break-duration" value="15" min="1" max="60">
+              </div>
+            </div>
+          </div>
+
+          <div class="pomodoro-stats card">
+            <h4>Today's Progress</h4>
+            <div class="pomodoro-stats-grid">
+              <div class="pomo-stat">
+                <span class="pomo-stat-value" id="pomo-completed">0</span>
+                <span class="pomo-stat-label">Sessions Completed</span>
+              </div>
+              <div class="pomo-stat">
+                <span class="pomo-stat-value" id="pomo-total-focus">0 min</span>
+                <span class="pomo-stat-label">Total Focus Time</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== SETTINGS ======== -->
+      <section id="section-settings" class="content-section" hidden>
+        <div class="settings-container">
+          <div class="settings-group card">
+            <h3><i class="fas fa-user-circle"></i> Profile</h3>
+            <div class="settings-fields">
+              <div class="form-group">
+                <label for="settings-name">Display Name</label>
+                <input type="text" id="settings-name" placeholder="Your name" value="Student">
+              </div>
+              <div class="form-group">
+                <label for="settings-avatar">Avatar</label>
+                <div class="avatar-upload">
+                  <div class="avatar-preview" id="settings-avatar-preview">S</div>
+                  <input type="file" id="settings-avatar" accept="image/*" hidden>
+                  <button class="btn-sm btn-outline" id="upload-avatar-btn">Upload</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="settings-email">Email</label>
+                <input type="email" id="settings-email" placeholder="you@example.com">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group card">
+            <h3><i class="fas fa-sliders-h"></i> Preferences</h3>
+            <div class="settings-fields">
+              <div class="form-group toggle-group">
+                <label>Dark Theme</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settings-dark-mode">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="form-group toggle-group">
+                <label>Desktop Notifications</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="settings-notifications" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label for="settings-camera-quality">Camera Quality</label>
+                <select id="settings-camera-quality">
+                  <option value="low">Low (480p)</option>
+                  <option value="medium" selected>Medium (720p)</option>
+                  <option value="high">High (1080p)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group card">
+            <h3><i class="fas fa-brain"></i> AI Settings</h3>
+            <div class="settings-fields">
+              <div class="form-group">
+                <label for="api-key-input">API Key</label>
+                <input type="password" id="api-key-input" placeholder="Enter your API key">
+              </div>
+              <div class="form-group">
+                <label for="ai-model-selector">Model</label>
+                <select id="ai-model-selector">
+                  <option value="gemini-pro">Gemini Pro</option>
+                  <option value="gemini-flash">Gemini Flash</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-3.5">GPT-3.5 Turbo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-group card">
+            <h3><i class="fas fa-database"></i> Data</h3>
+            <div class="settings-fields">
+              <div class="data-actions">
+                <button class="btn-outline" id="export-data-btn">
+                  <i class="fas fa-download"></i> Export Data
+                </button>
+                <button class="btn-danger" id="reset-progress-btn">
+                  <i class="fas fa-trash-alt"></i> Reset Progress
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-lg" id="save-settings">
+            <i class="fas fa-save"></i> Save Settings
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 5. NOTIFICATION TOAST                                        -->
+  <!-- ============================================================ -->
+  <div id="notification-toast" class="notification-toast" hidden>
+    <div class="toast-icon"><i class="fas fa-info-circle"></i></div>
+    <span class="toast-message"></span>
+    <button class="toast-close" aria-label="Close notification">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 6. MODALS                                                    -->
+  <!-- ============================================================ -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title"></h3>
+        <button class="modal-close" aria-label="Close modal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body"></div>
+      <div class="modal-actions">
+        <button class="btn-outline modal-cancel">Cancel</button>
+        <button class="btn-primary modal-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
